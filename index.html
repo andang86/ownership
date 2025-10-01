@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>기업 지배구조 분석</title>
+    <title>기업 지배구조 분석 (툴팁 버전)</title>
     <style>
         body {
             font-family: 'Malgun Gothic', sans-serif;
@@ -109,429 +109,272 @@
             font-weight: bold;
             color: #d9534f;
         }
+        
+        /* --- Tooltip Styles --- */
+        .has-source {
+            text-decoration: underline dotted #0056b3;
+            text-decoration-thickness: 1.5px;
+            cursor: help;
+            position: relative;
+        }
+        .tooltip {
+            visibility: hidden;
+            width: 250px;
+            background-color: #212529;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -125px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        .tooltip a {
+            color: #74c0fc;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .has-source:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>24개 주요 기업 지배구조 분석</h1>
+    <h1>24개 주요 기업 지배구조 분석 (출처 확인 기능)</h1>
+    <p style="text-align:center; font-size: 14px; color: #666;">※ 밑줄 표시된 정보에 마우스를 올리면 출처를 확인할 수 있습니다.</p>
 
-    <div class="tab-container">
-        </div>
-
-    <div class="content-container">
-        </div>
+    <div class="tab-container"></div>
+    <div class="content-container"></div>
 </div>
 
 <script>
+    const sources = {
+        'lgchem_br': { 'desc': 'LG화학 2023 사업보고서', 'url': 'https://www.lgchem.com/upload/file/sales-report/2023_Business_Report.pdf' },
+        'lgchem_fnguide': { 'desc': 'FnGuide LG화학 지분분석', 'url': 'https://comp.fnguide.com/SVO2/asp/SVD_shareanalysis.asp?pGB=1&gicode=A051910' },
+        'lgensol_br': { 'desc': 'LG에너지솔루션 2023 ESG보고서', 'url': 'https://kind.krx.co.kr/external/2024/06/27/000741/20240627001713/LG%EC%97%90%EB%84%88%EC%A7%80%EC%86%94%EB%A3%A8%EC%85%98%202023%20ESG%20Report_KOR.pdf' },
+        'lxhausys_fnguide': { 'desc': 'FnGuide LX하우시스 지분분석', 'url': 'https://comp.wisereport.co.kr/company/dart.aspx?cmp_cd=108670&cn=' },
+        'lxhausys_report': { 'desc': 'LX하우시스 기업분석 리포트', 'url': 'https://ssl.pstatic.net/imgstock/upload/research/company/1692314063691.pdf' },
+        'skairplus_article': { 'desc': '아이가스저널 (2024.11)', 'url': 'http://m.igasnet.com/news/articleView.html?idxno=21952' },
+        'skairplus_news': { 'desc': 'SK에코플랜트 뉴스룸', 'url': 'https://news.skecoplant.com/for-earth/16997/' },
+        'trbeltrack_corp': { 'desc': 'TR벨트랙 회사개요', 'url': 'http://trbeltrack.com/ko/menu01/sub02/' },
+        'naturetec_article': { 'desc': '충북넷 스마트공장 탐방기사', 'url': 'http://www.okcb.net/99389' },
+        'nhchem_brochure': { 'desc': '농협케미컬 브로슈어', 'url': 'http://m.nhchemical.com/doc/nhchem_brochure.pdf' },
+        'dongsuh_article': { 'desc': '씨저널 동서식품 기업분석', 'url': 'https://www.c-journal.co.kr/articleView?num=880' },
+        'dongwon_fnguide': { 'desc': 'FnGuide 동원시스템즈 지분분석', 'url': 'https://comp.fnguide.com/SVO2/asp/SVD_shareanalysis.asp?pGB=1&gicode=A014820' },
+        'lion_news': { 'desc': 'FnGuide 태경비케이 기업정보', 'url': 'https://comp.fnguide.com/SVO2/ASP/SVD_Main.asp?gicode=A014580' },
+        'bayer_partner': { 'desc': '농업인신문 (팜한농-바이엘 협력)', 'url': 'https://www.nongupin.co.kr/news/articleView.html?idxno=202304' },
+        'wacker_corp': { 'desc': '바커케미칼코리아 회사소개', 'url': 'http://jsic.co.kr/91' },
+        'samyang_fnguide': { 'desc': '삼양패키징 지속가능경영보고서', 'url': 'https://www.samyangpackaging.co.kr/resources/en/local/file/esg/report/%ED%8C%A8%ED%82%A4%EC%A7%95%20%EC%A7%80%EC%86%8D%EA%B0%80%EB%8A%A5%EA%B2%BD%EC%98%81%EB%B3%B4%EA%B3%A0%EC%84%9C2023_KOR.pdf' },
+        'serveone_news': { 'desc': '포춘코리아 (서브원 EV MRO)', 'url': 'https://www.fortunekorea.co.kr/news/articleView.html?idxno=28943' },
+        'seouljangsu_article': { 'desc': '글로벌이코노믹 기업분석', 'url': 'https://www.g-enews.com/article/Securities/2019/04/2019040315272427894a01b_f698f_1' },
+        'soulbrain_news': { 'desc': '스마트투데이 (솔브레인, 디엔에프 인수)', 'url': 'https://www.smarttoday.co.kr/news/articleView.html?idxno=37098' },
+        'ob_wiki': { 'desc': '위키백과 (OB맥주)', 'url': 'https://ko.wikipedia.org/wiki/OB_%EB%A7%A5%EC%A3%BC' },
+        'jeong_news': { 'desc': '뉴시스 (정식품 3세 경영)', 'url': 'https://mobile.newsis.com/view/NISX20240628_0002790662' },
+        'jeil_news': { 'desc': '뉴스워커 (하림 지배구조)', 'url': 'http://www.newsworker.co.kr/news/articleView.html?idxno=65515' },
+        'taekyung_fnguide': { 'desc': 'FnGuide 태경비케이 지분분석', 'url': 'https://comp.wisereport.co.kr/company/c1070001.aspx?cmpcd=014580&cn=' },
+        'farmstory_fnguide': { 'desc': 'FnGuide 팜스토리 지분분석', 'url': 'https://comp.wisereport.co.kr/company/c1070001.aspx?cmpcd=027710&cn=' },
+        'ppec_jobkorea': { 'desc': '잡코리아 기업정보', 'url': 'https://m.jobkorea.co.kr/company/44945369' },
+        'hanall_news': { 'desc': '의약뉴스 (대웅, 한올바이오 인수)', 'url': 'http://www.newsmp.com/news/articleView.html?idxno=139448' },
+    };
+
     const companies = [
-        {
-            id: 'lg-chem',
-            name: 'LG화학',
-            [cite_start]shareholders: '<li><strong>㈜LG:</strong> 30.06% (최대주주) [cite: 21][cite_start]</li><li><strong>국민연금공단:</strong> 8.64% [cite: 25]</li>',
-            governance: [
-                { name: '구광모 회장' },
-                { name: '㈜LG', detail: '지주회사' },
-                { name: 'LG화학', detail: '핵심 계열사' }
-            ],
-            relationships: `
-                <h3>모회사</h3>
-                [cite_start]<ul><li><strong>㈜LG:</strong> 그룹 지주회사로서 실질적 지배권 행사 [cite: 21, 23]</li></ul>
-                <h3>자회사</h3>
-                [cite_start]<ul><li><strong>LG에너지솔루션:</strong> 지분 81.84% 보유한 핵심 종속법인 [cite: 38][cite_start]</li><li><strong>㈜팜한농:</strong> 농화학 자회사 [cite: 16]</li></ul>
-                <h3>주요 고객 (Downstream)</h3>
-                [cite_start]<ul><li>자동차(LG에너지솔루션 통해), 전자, 건설, 소비재 등 다양한 산업 [cite: 33]</li></ul>
-                <h3>주요 공급처 (Upstream)</h3>
-                [cite_start]<ul><li><strong>석유화학 부문:</strong> 나프타 공급처 [cite: 36][cite_start]</li><li><strong>첨단소재 부문:</strong> 광물 및 특수 화학제품 공급처 [cite: 37]</li></ul>`
-        },
-        {
-            id: 'lg-ensol',
-            name: 'LG에너지솔루션',
-            [cite_start]shareholders: '<li><strong>LG화학:</strong> 81.8% (최대주주) [cite: 51][cite_start]</li><li><strong>국민연금공단:</strong> 5.54% [cite: 52]</li>',
-            governance: [
-                { name: '구광모 회장' },
-                { name: '㈜LG' },
-                { name: 'LG화학', detail: '모회사' },
-                { name: 'LG에너지솔루션', detail: 'LG화학 전지사업부 물적분할' }
-            ],
-            relationships: `
-                <h3>모회사</h3>
-                [cite_start]<ul><li><strong>LG화학:</strong> 지분 81.8%를 보유한 지배주주 [cite: 51]</li></ul>
-                <h3>주요 고객 (Downstream)</h3>
-                [cite_start]<ul><li>폭스바겐, GM, 포드, 스텔란티스, 현대기아차 등 글로벌 완성차 업체 [cite: 62]</li></ul>
-                <h3>주요 공급처 (Upstream)</h3>
-                [cite_start]<ul><li><strong>원자재:</strong> 리튬, 코발트, 니켈 등 글로벌 광물 기업 [cite: 67][cite_start]</li><li><strong>핵심부품:</strong> LG화학 (양극재 등) [cite: 69]</li></ul>`
-        },
-        {
-            id: 'lx-hausys',
-            name: 'LX하우시스',
-            [cite_start]shareholders: '<li><strong>㈜LX홀딩스 및 특수관계인:</strong> 33.60% [cite: 82]</li>',
-            governance: [
-                { name: 'LX그룹 (구본준 회장)' },
-                { name: '㈜LX홀딩스', detail: '지주회사' },
-                { name: 'LX하우시스', detail: '2022년 LG그룹에서 분리' }
-            ],
-            relationships: `
-                <h3>모회사</h3>
-                [cite_start]<ul><li><strong>㈜LX홀딩스:</strong> 그룹 지주회사 [cite: 82]</li></ul>
-                <h3>주요 고객 (Downstream)</h3>
-                [cite_start]<ul><li><strong>자동차소재 부문:</strong> <span class="highlight">현대기아차 (매출의 90% 이상)</span> [cite: 89][cite_start]</li><li><strong>건축자재 부문:</strong> 건설사, 인테리어 회사, 일반 소비자 [cite: 90]</li></ul>
-                <h3>주요 공급처 (Upstream)</h3>
-                [cite_start]<ul><li>PVC 등 석유화학 기반 원자재 공급처 [cite: 93]</li></ul>`
-        },
-        {
-            id: 'sk-airplus',
-            name: 'SK에어플러스',
-            [cite_start]shareholders: '<li><strong>SK에코플랜트:</strong> 100% (완전 자회사) [cite: 104]</li>',
-            governance: [
-                { name: 'SK그룹 (최태원 회장)' },
-                { name: 'SK㈜' },
-                { name: 'SK에코플랜트', detail: '모회사' },
-                { name: 'SK에어플러스', detail: '구 SK머티리얼즈에어플러스' }
-            ],
-            relationships: `
-                <h3>모회사</h3>
-                [cite_start]<ul><li><strong>SK에코플랜트:</strong> 2024년 편입된 100% 모회사 [cite: 104]</li></ul>
-                <h3>주요 고객 (Downstream)</h3>
-                [cite_start]<ul><li><span class="highlight">반도체 제조업체 (고객사 중 약 58%)</span> [cite: 112][cite_start]</li><li>석유화학, 정유 산업 [cite: 100]</li></ul>
-                <h3>주요 공급처 (Upstream)</h3>
-                [cite_start]<ul><li><strong>주요 원료:</strong> 공기 (Air) [cite: 114]</li></ul>`
-        },
-        {
-            id: 'tr-beltrack',
-            name: 'TR벨트랙',
-            [cite_start]shareholders: '<li>체인그룹 계열사 (정확한 지분율 정보 미확인) [cite: 247, 250]</li>',
-            governance: [
-                { name: '체인그룹' },
-                { name: '㈜체인' },
-                { name: 'TR벨트랙' }
-            ],
-            relationships: `
-                <h3>소속 그룹</h3>
-                [cite_start]<ul><li><strong>체인그룹:</strong> ㈜체인을 중심으로 한 그룹의 일원 [cite: 247, 250]</li></ul>
-                <h3>주요 고객 (Downstream)</h3>
-                [cite_start]<ul><li><strong>컨베이어벨트:</strong> 제철소, 발전소, 시멘트 공장, 광산 [cite: 256][cite_start]</li><li><strong>고무트랙:</strong> 건설장비 및 농업기계 제조업체 [cite: 257][cite_start]</li><li><strong>특수제품:</strong> 방위산업 [cite: 257]</li></ul>
-                <h3>주요 공급처 (Upstream)</h3>
-                [cite_start]<ul><li>천연고무, 합성고무, 직물(나일론 등), 스틸코드 공급처 [cite: 260]</li></ul>`
-        },
-        {
-            id: 'naturetec',
-            name: '네이처텍',
-            [cite_start]shareholders: '<li>오너 중심의 비상장 기업으로 추정 (구체적 지분율 미확인) [cite: 323, 324]</li>',
-            governance: [
-                { name: '오너 경영진 (대표이사)', detail: '비상장사' },
-                { name: '네이처텍', detail: '2012년 남양으로부터 계열 분리' }
-            ],
-            relationships: `
-                <h3>사업 모델</h3>
-                [cite_start]<ul><li>건강기능식품 및 화장품 OEM/ODM 전문 [cite: 318]</li></ul>
-                <h3>주요 고객 (Downstream)</h3>
-                [cite_start]<ul><li>남양유업, 동원F&B, hy 등 대형 식음료 기업 [cite: 332][cite_start]</li><li>코스맥스바이오, 콜마비앤에이치 등 건기식 전문 기업 [cite: 332]</li></ul>
-                <h3>주요 공급처 (Upstream)</h3>
-                [cite_start]<ul><li>알로에 등 다양한 천연물 원료 공급처 [cite: 335]</li></ul>`
-        },
-        {
-            id: 'nonghyup-chemical',
-            name: '농협케미컬',
-            [cite_start]shareholders: '<li><strong>농협:</strong> 100% (완전 자회사) [cite: 348]</li>',
-            governance: [
-                { name: '농협중앙회' },
-                { name: '농협경제지주', detail: '모회사' },
-                { name: '농협케미컬' }
-            ],
-            relationships: `
-                <h3>모회사</h3>
-                [cite_start]<ul><li><strong>농협경제지주:</strong> 100% 지분을 보유한 모회사 [cite: 348]</li></ul>
-                <h3>유통 채널 (Downstream)</h3>
-                [cite_start]<ul><li>전국 농협 유통망을 통해 농업인에게 직접 공급 [cite: 355]</li></ul>
-                <h3>주요 공급처 (Upstream)</h3>
-                [cite_start]<ul><li>작물보호제 원료(화학 원제) 국내외 공급처 [cite: 359]</li></ul>`
-        },
-        {
-            id: 'dongsuh-foods',
-            name: '동서식품',
-            [cite_start]shareholders: '<li><strong>㈜동서:</strong> 50% [cite: 369][cite_start]</li><li><strong>몬델리즈 인터내셔널:</strong> 50% [cite: 369]</li>',
-            governance: [
-                { name: '㈜동서 & 몬델리즈 인터내셔널', detail: '50:50 합작(Joint Venture)' },
-                { name: '동서식품', detail: '공동대표 체제' }
-            ],
-            relationships: `
-                <h3>특징</h3>
-                [cite_start]<ul><li><span class="highlight">㈜동서와 몬델리즈의 50:50 합작사 구조로, 반드시 합의에 기반한 경영이 이루어짐</span> [cite: 371]</li></ul>
-                <h3>모회사/파트너사</h3>
-                [cite_start]<ul><li><strong>㈜동서:</strong> 사실상의 지주회사이자 유통 담당 [cite: 366, 381][cite_start]</li><li><strong>몬델리즈 인터내셔널:</strong> 글로벌 식품 기업, 기술 및 소싱 네트워크 제공 [cite: 384]</li></ul>`
-        },
-        {
-            id: 'dongwon-systems',
-            name: '동원시스템즈',
-            [cite_start]shareholders: '<li><strong>동원산업㈜ 및 특수관계인:</strong> 83.37% [cite: 397]</li>',
-            governance: [
-                { name: '김남정 동원그룹 부회장' },
-                { name: '동원산업㈜', detail: '사업형 지주회사' },
-                { name: '동원시스템즈' }
-            ],
-            relationships: `
-                <h3>모회사</h3>
-                [cite_start]<ul><li><strong>동원산업㈜:</strong> 그룹의 사업형 지주회사 [cite: 397]</li></ul>
-                <h3>주요 고객 (Downstream)</h3>
-                [cite_start]<ul><li><strong>계열사:</strong> 동원F&B 등 [cite: 405][cite_start]</li><li><strong>글로벌 기업:</strong> 네슬레, 유니레버, 코카콜라 (베트남 법인 통해) [cite: 406][cite_start]</li><li><strong>2차 전지:</strong> LG에너지솔루션 등 국내외 배터리 제조사 [cite: 407]</li></ul>
-                <h3>주요 공급처 (Upstream)</h3>
-                [cite_start]<ul><li>석유화학 제품, 알루미늄, 철강, 유리 등 포장재 원재료 공급처 [cite: 409]</li></ul>`
-        },
-        {
-            id: 'lion-chemtech',
-            name: '라이온켐텍',
-            [cite_start]shareholders: '<li><strong>태경비케이:</strong> 34.26% (최대주주) [cite: 126][cite_start]</li><li><strong>태경케미컬:</strong> 21.32% [cite: 126]</li>',
-            governance: [
-                { name: '태경그룹 (김해련 회장)' },
-                { name: '태경비케이·태경케미컬', detail: '모회사' },
-                { name: '라이온켐텍', detail: '2024년 태경그룹에 인수' }
-            ],
-            relationships: `
-                <h3>모회사</h3>
-                [cite_start]<ul><li><strong>태경비케이, 태경케미컬:</strong> 2024년 경영권을 인수한 태경그룹 계열사 [cite: 126]</li></ul>
-                <h3>자회사</h3>
-                [cite_start]<ul><li><strong>라이온첨단소재:</strong> 100% 자회사 [cite: 139]</li></ul>
-                <h3>시장 위치 (Downstream)</h3>
-                [cite_start]<ul><li><strong>합성왁스:</strong> 국내 시장 점유율 1위 (약 45%) [cite: 133][cite_start]</li><li><strong>인조대리석:</strong> 국내 3위권, 매출 70% 이상이 해외 수출 (특히 북미) [cite: 135, 136]</li></ul>`
-        },
-        {
-            id: 'richmill',
-            name: '리치밀',
-            [cite_start]shareholders: '<li>넵스톤홀딩스그룹 계열사 (구체적인 지분구조 정보 미확인) [cite: 417, 421]</li>',
-            governance: [
-                { name: '넵스톤홀딩스그룹' },
-                { name: '리치밀' }
-            ],
-            relationships: `
-                <h3>소속 그룹</h3>
-                [cite_start]<ul><li><strong>넵스톤홀딩스그룹:</strong> 그룹 계열사로 분류됨 [cite: 417]</li></ul>
-                <h3>주요 고객 (Downstream)</h3>
-                [cite_start]<ul><li>CJ제일제당, 롯데웰푸드, 빙그레, 오리온 등 국내 대형 식품 제조업체 [cite: 426]</li></ul>
-                <h3>주요 공급처 (Upstream)</h3>
-                [cite_start]<ul><li>다양한 화학 원료 및 천연 추출물 국내외 공급처 [cite: 429]</li></ul>`
-        },
-        {
-            id: 'bayer-cropscience',
-            name: '바이엘크롭사이언스',
-            [cite_start]shareholders: '<li><strong>바이엘 그룹 (Bayer AG):</strong> 100% (완전 자회사) [cite: 439]</li>',
-            governance: [
-                { name: '바이엘 그룹 (독일)' },
-                { name: '바이엘크롭사이언스', detail: '농업 사업부문 한국 법인' }
-            ],
-            relationships: `
-                <h3>모회사</h3>
-                [cite_start]<ul><li><strong>바이엘 AG:</strong> 독일의 글로벌 생명과학 기업 [cite: 435]</li></ul>
-                <h3>유통 파트너 (Downstream)</h3>
-                [cite_start]<ul><li><span class="highlight"><strong>팜한농 (LG화학 자회사):</strong></span> 2024년 업무협약 체결, 바이엘 제품의 국내 판매 담당 [cite: 447, 448]</li></ul>
-                <h3>R&D 및 생산 (Upstream)</h3>
-                [cite_start]<ul><li>연구개발과 핵심 원료 생산은 대부분 바이엘 그룹의 글로벌 R&D 센터 및 생산 기지에서 수행 [cite: 451]</li></ul>`
-        },
-        {
-            id: 'wacker-chemicals',
-            name: '바커케미칼코리아',
-            [cite_start]shareholders: '<li><strong>바커 그룹 (WACKER):</strong> 100% (완전 자회사) [cite: 150]</li>',
-            governance: [
-                { name: '바커 가문 (지분 50% 소유)' },
-                { name: '바커 그룹 (독일)', detail: '가족 기업 형태' },
-                { name: '바커케미칼코리아', detail: '한국 현지 법인' }
-            ],
-            relationships: `
-                <h3>모회사</h3>
-                [cite_start]<ul><li><strong>바커 그룹:</strong> 창업주 가문이 50% 지분을 소유한 독일의 글로벌 화학 기업 [cite: 150]</li></ul>
-                <h3>주요 고객 (Downstream)</h3>
-                [cite_start]<ul><li><strong>건축자재:</strong> KCC글라스, LX하우시스 [cite: 158][cite_start]</li><li><strong>화학:</strong> 롯데엠시시, 코오롱이앤피 등 [cite: 159]</li></ul>
-                <h3>공급망 (Upstream)</h3>
-                [cite_start]<ul><li>그룹의 글로벌 소싱 네트워크를 통해 원자재 조달 [cite: 161]</li></ul>`
-        },
-        {
-            id: 'samyang-packaging',
-            name: '삼양패키징',
-            [cite_start]shareholders: '<li><strong>삼양사:</strong> 61.17% (최대주주) [cite: 175][cite_start]</li><li><strong>SK지오센트릭:</strong> 10.30% [cite: 175]</li>',
-            governance: [
-                { name: '삼양그룹' },
-                { name: '삼양홀딩스' },
-                { name: '삼양사', detail: '실질적 지주회사' },
-                { name: '삼양패키징' }
-            ],
-            relationships: `
-                <h3>모회사</h3>
-                [cite_start]<ul><li><strong>삼양사:</strong> 삼양그룹의 지주회사 격 [cite: 175]</li></ul>
-                <h3>자회사</h3>
-                [cite_start]<ul><li><strong>삼양에코테크:</strong> 100% 자회사 (폐플라스틱 재활용 사업) [cite: 189]</li></ul>
-                <h3>주요 고객 (Downstream)</h3>
-                [cite_start]<ul><li><strong>PET 용기:</strong> 국내외 대형 식음료, 생활용품 제조사 [cite: 184][cite_start]</li><li><strong>무균충전(Aseptic) OEM/ODM:</strong> 커피, 차, 주스 등 음료 생산 기업 [cite: 185]</li></ul>`
-        },
-        {
-            id: 'serveone',
-            name: '서브원',
-            [cite_start]shareholders: '<li><strong>어피니티에쿼티파트너스:</strong> 60.1% (사모펀드) [cite: 274][cite_start]</li><li><strong>LG D&O:</strong> 39.9% [cite: 274]</li>',
-            governance: [
-                { name: '어피니티에쿼티파트너스 (홍콩계 PEF)' },
-                { name: '서브원', detail: '2019년 LG그룹에서 매각' }
-            ],
-            relationships: `
-                <h3>주주 특성</h3>
-                [cite_start]<ul><li>2019년 LG그룹에서 분리되어 사모펀드(PEF)가 대주주 [cite: 269, 273]</li></ul>
-                <h3>주요 고객 (Downstream)</h3>
-                [cite_start]<ul><li><strong>핵심 고객:</strong> <span class="highlight">LG 계열사 (LG에너지솔루션 등)</span> [cite: 280, 281][cite_start]</li><li><strong>기타 고객:</strong> 전자, 자동차, 화학, 금융 등 전 산업 2,200여개 기업 [cite: 282]</li></ul>
-                <h3>사업 모델 (Upstream)</h3>
-                [cite_start]<ul><li>수많은 공급업체와 고객사를 연결하는 MRO(소모성 자재 구매대행) 플랫폼 역할 [cite: 285]</li></ul>`
-        },
-        {
-            id: 'seoul-jangsu',
-            name: '서울장수',
-            [cite_start]shareholders: '<li><strong>51명의 주주(회원):</strong> 각각 1.95% 동일 지분 소유 [cite: 463]</li>',
-            governance: [
-                { name: '51명 주주(회원)', detail: '협동조합 형태' },
-                { name: '서울탁주제조협회 (생산)' },
-                { name: '서울장수 (유통/판매)' }
-            ],
-            relationships: `
-                <h3>지배구조 특징</h3>
-                [cite_start]<ul><li><span class="highlight">1962년 설립된 서울탁주제조협회(협동조합)가 모체</span> [cite: 462][cite_start]</li><li>51명의 주주가 1.95%씩 동일한 지분을 소유하는 분산/평등 구조 [cite: 463]</li></ul>
-                <h3>유통 채널 (Downstream)</h3>
-                [cite_start]<ul><li>과거 식당 위주에서 최근 대형마트, 편의점 등으로 공격적 확대 [cite: 471]</li></ul>
-                <h3>주요 공급처 (Upstream)</h3>
-                [cite_start]<ul><li><strong>주원료:</strong> 국산 쌀 (국내 농가) [cite: 474]</li></ul>`
-        },
-        {
-            id: 'soulbrain-dnf',
-            name: '솔브레인디엔에프',
-            [cite_start]shareholders: '<li><strong>솔브레인:</strong> 30.1% (최대주주) [cite: 200][cite_start]</li><li><strong>삼성전자:</strong> 7% [cite: 201]</li>',
-            governance: [
-                { name: '솔브레인 그룹' },
-                { name: '솔브레인', detail: '모회사' },
-                { name: '솔브레인디엔에프', detail: '2023년 솔브레인이 인수' }
-            ],
-            relationships: `
-                <h3>모회사</h3>
-                [cite_start]<ul><li><strong>솔브레인:</strong> 2023년 인수한 반도체/디스플레이 소재 전문기업 [cite: 197]</li></ul>
-                <h3>주요 고객 (Downstream)</h3>
-                [cite_start]<ul><li><strong>핵심 고객:</strong> <span class="highlight">삼성전자, SK하이닉스</span> [cite: 207][cite_start]</li><li>기존 모회사의 고객 네트워크(삼성/LG디스플레이 등) 활용 [cite: 207]</li></ul>
-                <h3>주요 공급처 (Upstream)</h3>
-                [cite_start]<ul><li>고순도 화학 원료 국내외 공급처 [cite: 211]</li></ul>`
-        },
-        {
-            id: 'ob-beer',
-            name: '오비맥주',
-            [cite_start]shareholders: '<li><strong>Budweiser Brewing (Korea Holdings) Limited:</strong> 100% [cite: 485]</li>',
-            governance: [
-                { name: 'AB인베브 (벨기에)' },
-                { name: 'Budweiser Brewing', detail: '중간 지주회사' },
-                { name: '오비맥주', detail: '구 두산그룹 계열사' }
-            ],
-            relationships: `
-                <h3>모회사</h3>
-                [cite_start]<ul><li><strong>AB인베브:</strong> 세계 최대 맥주 기업 [cite: 482]</li></ul>
-                <h3>유통 채널 (Downstream)</h3>
-                [cite_start]<ul><li>제조사 → 종합주류도매상 → 소매점/유흥음식점 → 소비자 구조 [cite: 493][cite_start]</li><li>생산 및 물류 과정에서 다수 하청업체 활용 [cite: 495]</li></ul>
-                <h3>주요 공급처 (Upstream)</h3>
-                [cite_start]<ul><li>맥아(Malt), 홉(Hop) 등 원료는 대부분 수입 (AB인베브 글로벌 소싱 네트워크 활용) [cite: 497, 498]</li></ul>`
-        },
-        {
-            id: 'jeong-food',
-            name: '정식품',
-            [cite_start]shareholders: '<li><strong>정연호 대표 (오너 3세):</strong> 22.12% (최대주주) [cite: 512][cite_start]</li><li>창업주 일가가 지배하는 가족 기업 [cite: 511]</li>',
-            governance: [
-                { name: '정재원 창업주 (1세)' },
-                { name: '정성수 회장 (2세)' },
-                { name: '정연호 대표 (3세)' },
-                { name: '정식품' }
-            ],
-            relationships: `
-                <h3>지배구조 특징</h3>
-                [cite_start]<ul><li>창업주 일가가 지배하는 전형적인 가족 기업으로 3세 경영 승계 진행 중 [cite: 511]</li></ul>
-                <h3>관계사</h3>
-                <ul><li><strong>㈜오쎄:</strong> 화장품, 온라인 쇼핑몰. 오너 일가 지분 보유. [cite_start]그룹 핵심 유통 채널이자 승계 과정에 활용 가능성 [cite: 521, 522]</li></ul>
-                <h3>주요 공급처 (Upstream)</h3>
-                [cite_start]<ul><li><strong>콩(대두):</strong> 한국농수산식품유통공사(aT) 통해 수입 [cite: 525]</li></ul>`
-        },
-        {
-            id: 'jeil-feed',
-            name: '제일사료',
-            [cite_start]shareholders: '<li><strong>하림지주:</strong> 88.1% [cite: 537][cite_start]</li><li><strong>올품:</strong> 11.9% (김홍국 회장 아들 100% 소유 회사) [cite: 537]</li>',
-            governance: [
-                { name: '김홍국 하림그룹 회장' },
-                { name: '하림지주', detail: '지주회사' },
-                { name: '제일사료', detail: '하림지주 사료사업부 물적분할' }
-            ],
-            relationships: `
-                <h3>모회사</h3>
-                [cite_start]<ul><li><strong>하림지주:</strong> 그룹 지주회사 [cite: 537]</li></ul>
-                <h3>자회사</h3>
-                [cite_start]<ul><li><strong>하림펫푸드:</strong> 100% 자회사 [cite: 546]</li></ul>
-                <h3>주요 고객 (Downstream)</h3>
-                [cite_start]<ul><li><strong>그룹 내 계열사:</strong> <span class="highlight">㈜하림 등 축산 계열사 (내부거래 비중 약 19.5%)</span> [cite: 544, 545]</li></ul>
-                <h3>주요 공급처 (Upstream)</h3>
-                [cite_start]<ul><li><strong>국제 곡물:</strong> 하림그룹 계열사인 팬오션을 통해 조달 [cite: 549]</li></ul>`
-        },
-        {
-            id: 'taekyung-bk',
-            name: '태경BK',
-            [cite_start]shareholders: '<li><strong>태경산업:</strong> 43.55% (최대주주) [cite: 223]</li>',
-            governance: [
-                { name: '김해련 회장' },
-                { name: '태경산업', detail: '실질적 지주회사' },
-                { name: '태경BK' }
-            ],
-            relationships: `
-                <h3>모회사</h3>
-                [cite_start]<ul><li><strong>태경산업:</strong> 태경그룹의 실질적 지주회사 [cite: 223]</li></ul>
-                <h3>자회사</h3>
-                [cite_start]<ul><li><strong>라이온켐텍:</strong> 2024년 지분 34.26% 인수 [cite: 235]</li></ul>
-                <h3>주요 고객 (Downstream)</h3>
-                [cite_start]<ul><li><strong>석회 사업:</strong> <span class="highlight">포스코, 현대제철</span> 등 국내 주요 제강사 [cite: 230][cite_start]</li><li><strong>중질탄산칼슘:</strong> 한창제지, KCC글라스 등 [cite: 232]</li></ul>`
-        },
-        {
-            id: 'farmstory',
-            name: '팜스토리',
-            [cite_start]shareholders: '<li><strong>이지홀딩스:</strong> 46.66% (최대주주) [cite: 560]</li>',
-            governance: [
-                { name: '이지바이오 그룹' },
-                { name: '이지홀딩스', detail: '지주회사' },
-                { name: '팜스토리' }
-            ],
-            relationships: `
-                <h3>모회사</h3>
-                [cite_start]<ul><li><strong>이지홀딩스:</strong> 이지바이오 그룹의 지주회사 [cite: 557, 560]</li></ul>
-                <h3>사업 구조</h3>
-                [cite_start]<ul><li>사료 제조, 양돈, 도계, 육가공까지 아우르는 축산 수직계열화 [cite: 577]</li></ul>
-                <h3>주요 공급처 (Upstream)</h3>
-                [cite_start]<ul><li><strong>국제 곡물:</strong> 그룹 차원에서 공동 구매하여 원가 경쟁력 확보 [cite: 573]</li></ul>`
-        },
-        {
-            id: 'ppec-namul',
-            name: '피피이씨음성나물',
-            [cite_start]shareholders: '<li>풀무원그룹 계열사 (정확한 지분율 정보 미확인) [cite: 581]</li>',
-            governance: [
-                { name: '풀무원그룹' },
-                { name: '㈜풀무원' },
-                { name: '피피이씨음성나물', detail: '풀무원 나물사업부문 분할 설립' }
-            ],
-            relationships: `
-                <h3>모회사</h3>
-                [cite_start]<ul><li><strong>㈜풀무원:</strong> 2003년 나물사업부문을 분할하여 설립 [cite: 581]</li></ul>
-                <h3>사업</h3>
-                [cite_start]<ul><li>콩나물 등 신선 나물류 재배, 가공, 유통 [cite: 581]</li></ul>`
-        },
-        {
-            id: 'hanall-biopharma',
-            name: '한올바이오파마',
-            [cite_start]shareholders: '<li><strong>대웅제약:</strong> 31.05% (최대주주) [cite: 296][cite_start]</li><li><strong>국민연금공단:</strong> 10.04% [cite: 296]</li>',
-            governance: [
-                { name: '㈜대웅' },
-                { name: '대웅제약', detail: '모회사' },
-                { name: '한올바이오파마', detail: '2015년 대웅제약이 인수' }
-            ],
-            relationships: `
-                <h3>모회사</h3>
-                [cite_start]<ul><li><strong>대웅제약:</strong> 2015년 지분 30%를 인수하여 자회사로 편입 [cite: 297]</li></ul>
-                <h3>경영구조 특징</h3>
-                [cite_start]<ul><li>대웅제약 출신 임원을 공동대표로 파견하여 그룹 시너지 및 직접 통제 강화 [cite: 301]</li></ul>
-                <h3>사업 모델 (Downstream)</h3>
-                [cite_start]<ul><li>자체 개발 신약 후보물질을 글로벌 제약사에 기술 이전(Licensing Out)하는 것이 핵심 [cite: 305]</li></ul>`
-        }
+        { id: 'lg-chem', name: 'LG화학', governance: [{ name: '구광모 회장' }, { name: '㈜LG', detail: '지주회사' }, { name: 'LG화학', detail: '핵심 계열사' }], content: [
+            { title: '지분 구조', items: [
+                { text: '<strong>㈜LG:</strong> 30.06% (최대주주)', sourceId: 'lgchem_fnguide' },
+                { text: '<strong>국민연금공단:</strong> 8.64%', sourceId: 'lgchem_fnguide' }
+            ]},
+            { title: '자회사 관계', items: [
+                { text: '<strong>LG에너지솔루션:</strong> 지분 81.84% 보유한 핵심 종속법인', sourceId: 'lgchem_br' },
+                { text: '<strong>㈜팜한농:</strong> 농화학 자회사', sourceId: 'lgchem_br' }
+            ]}
+        ]},
+        { id: 'lg-ensol', name: 'LG에너지솔루션', governance: [{ name: '구광모 회장' }, { name: '㈜LG' }, { name: 'LG화학', detail: '모회사' }, { name: 'LG에너지솔루션', detail: '2020년 물적분할' }], content: [
+            { title: '지분 구조', items: [
+                { text: '<strong>LG화학:</strong> 81.8% (최대주주)', sourceId: 'lgensol_br' },
+                { text: '<strong>국민연금공단:</strong> 5.54%', sourceId: 'lgensol_br' }
+            ]},
+            { title: '주요 고객 (Downstream)', items: [
+                { text: '폭스바겐, GM, 포드, 스텔란티스, 현대기아차 등 글로벌 완성차 업체' }
+            ]}
+        ]},
+        { id: 'lx-hausys', name: 'LX하우시스', governance: [{ name: 'LX그룹 (구본준 회장)' }, { name: '㈜LX홀딩스', detail: '지주회사' }, { name: 'LX하우시스', detail: '2022년 LG에서 분리' }], content: [
+            { title: '지분 구조', items: [
+                { text: '<strong>㈜LX홀딩스 및 특수관계인:</strong> 33.60%', sourceId: 'lxhausys_fnguide' }
+            ]},
+            { title: '주요 고객 (Downstream)', items: [
+                { text: '<span class="highlight">자동차소재 부문 매출의 90% 이상이 현대기아차에서 발생</span>', sourceId: 'lxhausys_report' }
+            ]}
+        ]},
+        { id: 'sk-airplus', name: 'SK에어플러스', governance: [{ name: 'SK그룹' }, { name: 'SK㈜' }, { name: 'SK에코플랜트', detail: '모회사' }, { name: 'SK에어플러스', detail: '구 SK머티리얼즈에어플러스' }], content: [
+            { title: '모회사 관계', items: [
+                { text: '<strong>SK에코플랜트</strong>가 지분 100%를 보유한 완전 자회사', sourceId: 'skairplus_article' }
+            ]},
+            { title: '주요 고객 (Downstream)', items: [
+                { text: '<span class="highlight">전체 고객사 중 약 58%가 반도체 기업</span>', sourceId: 'skairplus_news' }
+            ]}
+        ]},
+        { id: 'tr-beltrack', name: 'TR벨트랙', governance: [{ name: '체인그룹' }, { name: '㈜체인' }, { name: 'TR벨트랙' }], content: [
+            { title: '소속 그룹', items: [
+                { text: '1951년 설립, 현재 <strong>체인그룹</strong>의 계열사', sourceId: 'trbeltrack_corp' }
+            ]},
+            { title: '주요 사업', items: [
+                { text: '산업용 고무 컨베이어벨트, 건설/농업기계용 고무트랙 제조' }
+            ]}
+        ]},
+        { id: 'naturetec', name: '네이처텍', governance: [{ name: '오너 경영진 (대표이사)', detail: '비상장사' }, { name: '네이처텍', detail: '2012년 남양으로부터 분리' }], content: [
+            { title: '사업 모델', items: [
+                { text: '건강기능식품 및 화장품 OEM/ODM 전문 기업', sourceId: 'naturetec_article' }
+            ]},
+            { title: '특징', items: [
+                { text: '과거 전 세계 알로에 원료의 40%를 공급했을 정도로 원료 소싱에 강점', sourceId: 'naturetec_article' }
+            ]}
+        ]},
+        { id: 'nh-chem', name: '농협케미컬', governance: [{ name: '농협중앙회' }, { name: '농협경제지주', detail: '모회사' }, { name: '농협케미컬' }], content: [
+            { title: '모회사 관계', items: [
+                { text: '<strong>농협경제지주</strong>가 100% 지분을 출자한 완전 자회사', sourceId: 'nhchem_brochure' }
+            ]},
+            { title: '유통 채널', items: [
+                { text: '전국 농협의 광범위한 유통망을 통해 농업인에게 공급' }
+            ]}
+        ]},
+        { id: 'dongsuh-foods', name: '동서식품', governance: [{ name: '㈜동서 & 몬델리즈 인터내셔널', detail: '50:50 합작(Joint Venture)' }, { name: '동서식품', detail: '공동대표 체제' }], content: [
+            { title: '지분 구조', items: [
+                { text: '<span class="highlight"><strong>㈜동서 50%, 몬델리즈 인터내셔널 50%</strong>의 독특한 합작 구조</span>', sourceId: 'dongsuh_article' }
+            ]},
+            { title: '경영 구조', items: [
+                { text: '이사회는 양측에서 5명씩 총 10명으로 구성되며, 공동대표 체제 유지', sourceId: 'dongsuh_article' }
+            ]}
+        ]},
+        { id: 'dongwon-systems', name: '동원시스템즈', governance: [{ name: '김남정 동원그룹 부회장' }, { name: '동원산업㈜', detail: '사업형 지주회사' }, { name: '동원시스템즈' }], content: [
+            { title: '지분 구조', items: [
+                { text: '<strong>동원산업㈜ 및 특수관계인:</strong> 83.37%', sourceId: 'dongwon_fnguide' }
+            ]},
+            { title: '주요 사업', items: [
+                { text: '종합 포장재 사업과 2차 전지용 알루미늄 사업 영위' }
+            ]}
+        ]},
+        { id: 'lion-chemtech', name: '라이온켐텍', governance: [{ name: '태경그룹' }, { name: '태경비케이·태경케미컬', detail: '모회사' }, { name: '라이온켐텍', detail: '2024년 태경그룹에 인수' }], content: [
+            { title: '지분 구조 (2024년 변동)', items: [
+                { text: '<strong>태경비케이:</strong> 34.26% (최대주주)', sourceId: 'lion_news' },
+                { text: '<strong>태경케미컬:</strong> 21.32%', sourceId: 'lion_news' }
+            ]}
+        ]},
+        { id: 'richmill', name: '리치밀', governance: [{ name: '넵스톤홀딩스그룹' }, { name: '리치밀' }], content: [
+            { title: '소속 그룹', items: [
+                { text: '식품첨가물 제조사, <strong>넵스톤홀딩스그룹</strong> 계열사로 분류' }
+            ]},
+            { title: '주요 고객', items: [
+                { text: 'CJ제일제당, 롯데웰푸드, 빙그레, 오리온 등 대형 식품 제조업체' }
+            ]}
+        ]},
+        { id: 'bayer-cropscience', name: '바이엘크롭사이언스', governance: [{ name: '바이엘 그룹 (독일)' }, { name: '바이엘크롭사이언스', detail: '농업 사업부문 한국 법인' }], content: [
+            { title: '모회사 관계', items: [
+                { text: '독일 바이엘 그룹이 100% 지분을 소유한 완전 자회사' }
+            ]},
+            { title: '유통 파트너', items: [
+                { text: '<span class="highlight"><strong>팜한농(LG화학 자회사)</strong>과 업무협약 체결, 국내 판매 담당</span>', sourceId: 'bayer_partner' }
+            ]}
+        ]},
+        { id: 'wacker-chemicals', name: '바커케미칼코리아', governance: [{ name: '바커 가문 (지분 50%)' }, { name: '바커 그룹 (독일)' }, { name: '바커케미칼코리아', detail: '한국 법인' }], content: [
+            { title: '모회사 관계', items: [
+                { text: '독일 바커(WACKER) 그룹의 100% 자회사', sourceId: 'wacker_corp' }
+            ]},
+            { title: '주요 사업', items: [
+                { text: 'VAE 에멀젼, 접착제, 실리콘 등 화학제품 제조 및 판매' }
+            ]}
+        ]},
+        { id: 'samyang-packaging', name: '삼양패키징', governance: [{ name: '삼양그룹' }, { name: '삼양홀딩스' }, { name: '삼양사', detail: '실질적 지주회사' }, { name: '삼양패키징' }], content: [
+            { title: '지분 구조', items: [
+                { text: '<strong>삼양사:</strong> 61.17% (최대주주)', sourceId: 'samyang_fnguide' },
+                { text: '<strong>SK지오센트릭:</strong> 10.30%', sourceId: 'samyang_fnguide' }
+            ]},
+            { title: '자회사', items: [
+                { text: '<strong>삼양에코테크(100%):</strong> 폐플라스틱 재활용 사업', sourceId: 'samyang_fnguide' }
+            ]}
+        ]},
+        { id: 'serveone', name: '서브원', governance: [{ name: '어피니티에쿼티파트너스' }, { name: '서브원', detail: '2019년 LG에서 매각' }], content: [
+            { title: '지분 구조', items: [
+                { text: '<strong>어피니티에쿼티파트너스(사모펀드):</strong> 60.1%', sourceId: 'serveone_news' },
+                { text: '<strong>LG D&O:</strong> 39.9%', sourceId: 'serveone_news' }
+            ]},
+            { title: '주요 고객', items: [
+                { text: '<span class="highlight">분리 후에도 LG계열사를 핵심 고객으로 유지</span>, 동시에 비LG고객사 적극 확대', sourceId: 'serveone_news' }
+            ]}
+        ]},
+        { id: 'seoul-jangsu', name: '서울장수', governance: [{ name: '51명 주주(회원)', detail: '협동조합 형태' }, { name: '서울탁주제조협회 (생산)' }, { name: '서울장수 (유통/판매)' }], content: [
+            { title: '지분 구조', items: [
+                { text: '<span class="highlight"><strong>51명의 주주가 각각 1.95%</strong>의 동일한 지분을 소유하는 협동조합 형태</span>', sourceId: 'seouljangsu_article' }
+            ]}
+        ]},
+        { id: 'soulbrain-dnf', name: '솔브레인디엔에프', governance: [{ name: '솔브레인 그룹' }, { name: '솔브레인', detail: '모회사' }, { name: '솔브레인디엔에프', detail: '2023년 인수' }], content: [
+            { title: '모회사 관계', items: [
+                { text: '2023년 <strong>솔브레인</strong>이 960억원에 인수하여 그룹 편입', sourceId: 'soulbrain_news' }
+            ]},
+            { title: '지분 구조', items: [
+                { text: '<strong>솔브레인:</strong> 30.1% (최대주주)', sourceId: 'soulbrain_news' },
+                { text: '<strong>삼성전자:</strong> 7% 지분 유지', sourceId: 'soulbrain_news' }
+            ]}
+        ]},
+        { id: 'ob-beer', name: '오비맥주', governance: [{ name: 'AB인베브 (벨기에)' }, { name: 'Budweiser Brewing' }, { name: '오비맥주' }], content: [
+            { title: '모회사 관계', items: [
+                { text: '세계 최대 맥주 기업 <strong>AB인베브</strong>의 100% 자회사', sourceId: 'ob_wiki' }
+            ]}
+        ]},
+        { id: 'jeong-food', name: '정식품', governance: [{ name: '정재원 창업주 (1세)' }, { name: '정성수 회장 (2세)' }, { name: '정연호 대표 (3세)' }, { name: '정식품' }], content: [
+            { title: '지분 구조', items: [
+                { text: '<strong>정연호 대표 (오너 3세):</strong> 22.12% (최대주주)', sourceId: 'jeong_news' }
+            ]},
+            { title: '특징', items: [
+                { text: '창업주 일가가 지배하는 전형적인 가족 기업으로 3세 경영 승계 진행 중' }
+            ]}
+        ]},
+        { id: 'jeil-feed', name: '제일사료', governance: [{ name: '김홍국 하림그룹 회장' }, { name: '하림지주' }, { name: '제일사료' }], content: [
+            { title: '지분 구조', items: [
+                { text: '<strong>하림지주:</strong> 88.1%', sourceId: 'jeil_news' },
+                { text: '<strong>올품:</strong> 11.9% (김홍국 회장 아들 100% 소유 회사)', sourceId: 'jeil_news' }
+            ]},
+            { title: '그룹 내 역할', items: [
+                { text: '생산된 사료는 ㈜하림 등 그룹 내 다수 축산 계열사에 공급 (내부거래 비중 약 19.5%)', sourceId: 'jeil_news' }
+            ]}
+        ]},
+        { id: 'taekyung-bk', name: '태경BK', governance: [{ name: '김해련 회장' }, { name: '태경산업' }, { name: '태경BK' }], content: [
+            { title: '지분 구조', items: [
+                { text: '<strong>태경산업(실질적 지주회사):</strong> 43.55%', sourceId: 'taekyung_fnguide' }
+            ]},
+            { title: '주요 고객 (Downstream)', items: [
+                { text: '<strong>석회 사업:</strong> <span class="highlight">포스코, 현대제철</span> 등 국내 주요 제강사' }
+            ]}
+        ]},
+        { id: 'farmstory', name: '팜스토리', governance: [{ name: '이지바이오 그룹' }, { name: '이지홀딩스' }, { name: '팜스토리' }], content: [
+            { title: '지분 구조', items: [
+                { text: '<strong>이지홀딩스(지주회사):</strong> 46.66%', sourceId: 'farmstory_fnguide' }
+            ]},
+            { title: '사업 구조', items: [
+                { text: '사료 생산부터 사육, 도축, 육가공까지 이어지는 축산 수직계열화' }
+            ]}
+        ]},
+        { id: 'ppec-namul', name: '피피이씨음성나물', governance: [{ name: '풀무원그룹' }, { name: '㈜풀무원' }, { name: '피피이씨음성나물' }], content: [
+            { title: '모회사 관계', items: [
+                { text: '2003년 <strong>㈜풀무원</strong>의 나물사업부문이 분할되어 설립', sourceId: 'ppec_jobkorea' }
+            ]}
+        ]},
+        { id: 'hanall-biopharma', name: '한올바이오파마', governance: [{ name: '㈜대웅' }, { name: '대웅제약' }, { name: '한올바이오파마' }], content: [
+            { title: '모회사 관계', items: [
+                { text: '2015년 <strong>대웅제약</strong>이 지분 30%를 인수하여 자회사로 편입', sourceId: 'hanall_news' }
+            ]},
+            { title: '지분 구조', items: [
+                { text: '<strong>대웅제약:</strong> 31.05% (최대주주)', sourceId: 'hanall_news' }
+            ]}
+        ]}
     ];
 
     const tabContainer = document.querySelector('.tab-container');
@@ -547,12 +390,12 @@
         tabContainer.appendChild(button);
 
         // Create Content Div
-        const content = document.createElement('div');
-        content.id = company.id;
-        content.className = 'content';
-        if (index === 0) content.classList.add('active');
-
-        // Governance Chain HTML
+        const contentDiv = document.createElement('div');
+        contentDiv.id = company.id;
+        contentDiv.className = 'content';
+        if (index === 0) contentDiv.classList.add('active');
+        
+        // Build Governance Chain
         let governanceHtml = '';
         company.governance.forEach((item, i) => {
             governanceHtml += `<div class="chain-item"><strong>${item.name}</strong>${item.detail ? `<br><small>${item.detail}</small>` : ''}</div>`;
@@ -561,16 +404,29 @@
             }
         });
 
-        content.innerHTML = `
+        // Build Main Content with Tooltips
+        let mainContentHtml = '';
+        company.content.forEach(section => {
+            mainContentHtml += `<h3>${section.title}</h3><ul>`;
+            section.items.forEach(item => {
+                if (item.sourceId && sources[item.sourceId]) {
+                    const sourceInfo = sources[item.sourceId];
+                    const tooltipHtml = `<span class="tooltip">${sourceInfo.desc}<br><a href="${sourceInfo.url}" target="_blank" rel="noopener noreferrer">출처 바로가기</a></span>`;
+                    mainContentHtml += `<li><span class="has-source">${item.text}${tooltipHtml}</span></li>`;
+                } else {
+                    mainContentHtml += `<li>${item.text}</li>`;
+                }
+            });
+            mainContentHtml += `</ul>`;
+        });
+        
+        contentDiv.innerHTML = `
             <h2>${company.name}</h2>
-            <h3>지분 구조</h3>
-            <ul>${company.shareholders}</ul>
+            ${mainContentHtml}
             <h3>지배 구조 (가치사슬 모형)</h3>
             <div class="governance-chain">${governanceHtml}</div>
-            <h3>주요 관계사 및 사업 관계</h3>
-            ${company.relationships}
         `;
-        contentContainer.appendChild(content);
+        contentContainer.appendChild(contentDiv);
     });
 
     const tabButtons = document.querySelectorAll('.tab-button');
@@ -580,15 +436,12 @@
         const target = e.target;
         if (target.classList.contains('tab-button')) {
             const targetId = target.dataset.target;
-
             tabButtons.forEach(btn => btn.classList.remove('active'));
             target.classList.add('active');
-
             contents.forEach(content => {
+                content.classList.remove('active');
                 if (content.id === targetId) {
                     content.classList.add('active');
-                } else {
-                    content.classList.remove('active');
                 }
             });
         }
